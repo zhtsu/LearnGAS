@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
+#include "LearnGAS.h"
 #include "MyGameplayAbility.generated.h"
 
 /**
@@ -14,4 +15,9 @@ class LEARNGAS_API UMyGameplayAbility : public UGameplayAbility
 {
 	GENERATED_BODY()
 	
+public:
+	UMyGameplayAbility();
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Ability")
+	EMyAbilityID AbilityID = EMyAbilityID::None;
 };

@@ -5,14 +5,18 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
+#include "MyAttributeSet.h"
+#include "AbilitySystemInterface.h"
+#include "GameplayEffectTypes.h"
 #include "LearnGASCharacter.generated.h"
 
 
 UCLASS(config=Game)
-class ALearnGASCharacter : public ACharacter
+class ALearnGASCharacter : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
+public:
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* CameraBoom;
@@ -20,7 +24,27 @@ class ALearnGASCharacter : public ACharacter
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
+
+	// GAS
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	class UMyAbilitySystemComponent* AbilitySystemComponent;
 	
+	UPROPERTY()
+	class UMyAttributeSet* Attributes;
+
+	virtual void InitializeAttributes();
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
+	TSubclassOf<class UGameplayEffect> DefaultAttributeEffect;
+
+	virtual void GiveAbilities();
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
+	TArray<TSubclassOf<class UMyGameplayAbility>> DefaultAbilities;
+
+	virtual void PossessedBy(AController* NewController) override;
+	virtual void OnRep_PlayerState() override;
+
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputMappingContext* DefaultMappingContext;
@@ -49,6 +73,7 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 			
+	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 protected:
 	// APawn interface

@@ -9,7 +9,62 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "MyAbilitySystemComponent.h"
+#include "MyGameplayAbility.h"
 
+
+void ALearnGASCharacter::InitializeAttributes()
+{
+	if (AbilitySystemComponent && DefaultAttributeEffect)
+	{
+		FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+		EffectContext.AddSourceObject(this);
+
+		FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(DefaultAttributeEffect, 1, EffectContext);
+	
+		if (SpecHandle.IsValid())
+		{
+			FActiveGameplayEffectHandle GEHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+		}
+	}
+}
+
+void ALearnGASCharacter::GiveAbilities()
+{
+	if (HasAuthority() && AbilitySystemComponent)
+	{
+		for (TSubclassOf<UMyGameplayAbility>& StartupAbility : DefaultAbilities)
+		{
+			AbilitySystemComponent->GiveAbility(
+				FGameplayAbilitySpec(StartupAbility, 1, static_cast<int32>(StartupAbility.GetDefaultObject()->AbilityID), this));
+		}
+	}
+}
+
+void ALearnGASCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	// Server GAS init
+	AbilitySystemComponent->InitAbilityActorInfo(this, this);
+
+	InitializeAttributes();
+	GiveAbilities();
+}
+
+void ALearnGASCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	AbilitySystemComponent->InitAbilityActorInfo(this, this);
+	InitializeAttributes();
+
+	if (AbilitySystemComponent && InputComponent)
+	{
+		const FGameplayAbilityInputBinds Binds("Confirm", "Cancel", "EMyAbilityID", static_cast<int32>(EMyAbilityID::Confirm), static_cast<int32>(EMyAbilityID::Cancel));
+		AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, Binds);
+	}
+}
 
 //////////////////////////////////////////////////////////////////////////
 // ALearnGASCharacter
@@ -49,6 +104,9 @@ ALearnGASCharacter::ALearnGASCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+	AbilitySystemComponent = CreateAbstractDefaultSubobject<UMyAbilitySystemComponent>("AbilitySystemComp");
+	AbilitySystemComponent->SetIsReplicated(true);
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
 }
 
 void ALearnGASCharacter::BeginPlay()
@@ -86,6 +144,11 @@ void ALearnGASCharacter::SetupPlayerInputComponent(class UInputComponent* Player
 
 	}
 
+	if (AbilitySystemComponent && InputComponent)
+	{
+		const FGameplayAbilityInputBinds Binds("Confirm", "Cancel", "EMyAbilityID", static_cast<int32>(EMyAbilityID::Confirm), static_cast<int32>(EMyAbilityID::Cancel));
+		AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, Binds);
+	}
 }
 
 void ALearnGASCharacter::Move(const FInputActionValue& Value)
@@ -124,6 +187,10 @@ void ALearnGASCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
+class UAbilitySystemComponent* ALearnGASCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
+}
 
 
 

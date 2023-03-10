@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 
 UENUM(BlueprintType)
-enum class MyAbilityID : uint8
+enum class EMyAbilityID : uint8
 {
 	None = 0,
 	Confirm,
