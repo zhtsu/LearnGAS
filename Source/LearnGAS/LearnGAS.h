@@ -11,5 +11,5 @@ enum class EMyAbilityID : uint8
 	Confirm,
 	Cancel,
 	// Customized abilities
-	Jump
+	JumpStart
 };

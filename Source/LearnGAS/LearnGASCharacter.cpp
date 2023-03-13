@@ -10,6 +10,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "MyAbilitySystemComponent.h"
 #include "MyGameplayAbility.h"
+#include "MyAttributeSet.h"
 
 //////////////////////////////////////////////////////////////////////////
 // ALearnGASCharacter
@@ -108,6 +109,8 @@ ALearnGASCharacter::ALearnGASCharacter()
 	AbilitySystemComponent = CreateAbstractDefaultSubobject<UMyAbilitySystemComponent>("AbilitySystemComp");
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
+
+	Attributes = CreateDefaultSubobject<UMyAttributeSet>("Attributes");
 }
 
 //////////////////////////////////////////////////////////////////////////
